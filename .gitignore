@@ -1,0 +1,12 @@
+# Build output
+bin/
+obj/
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.user
+
+# Local secrets (ntfy topic for local runs) - never commit
+.env

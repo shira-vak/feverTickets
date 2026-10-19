@@ -1,0 +1,53 @@
+name: Check tickets
+
+on:
+  schedule:
+    # Times are UTC. GitHub runs scheduled jobs on a best-effort basis - they can start a few minutes late.
+    - cron: "*/10 * * * *" # availability check every 10 minutes
+    - cron: "3 5 * * *" # daily heartbeat - 07:03 Israel winter time (UTC+2)
+  # Adds a "Run workflow" button in the Actions tab, for manual test runs.
+  workflow_dispatch:
+    inputs:
+      heartbeat:
+        description: "Also send the 'still watching' message"
+        type: boolean
+        default: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Check tickets
+        run: dotnet run --project src/FeverTickets --configuration Release
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # Optional overrides - set them under Settings → Secrets and variables → Actions → Variables.
+          # When a variable is not defined it arrives empty and the script uses its default.
+          EVENT_URL: ${{ vars.EVENT_URL }}
+          TARGET_SESSIONS: ${{ vars.TARGET_SESSIONS }}
+          PRIMARY_ZONE: ${{ vars.PRIMARY_ZONE }}
+          SECONDARY_ZONE: ${{ vars.SECONDARY_ZONE }}
+          LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+          HEARTBEAT: ${{ github.event.schedule == '3 5 * * *' || inputs.heartbeat }}
+
+      # Runs only when an earlier step failed (build error, page changed, network error, ntfy error...).
+      - name: Alert on failure
+        if: failure()
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: >-
+          curl --silent --show-error --fail
+          -H "Title: Ticket checker failed"
+          -H "Priority: high"
+          -H "Tags: warning"
+          -H "Click: $RUN_URL"
+          -d "The ticket check did not complete. Tap to open the run logs."
+          "https://ntfy.sh/$NTFY_TOPIC"

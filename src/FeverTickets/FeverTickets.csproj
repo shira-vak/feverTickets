@@ -1,0 +1,8 @@
+<!-- Shared settings (target framework, nullable, warnings-as-errors) come from Directory.Build.props. -->
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+</Project>
