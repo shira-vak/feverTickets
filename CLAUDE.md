@@ -17,7 +17,7 @@ Source of truth for all code generation in this project.
 
 ## Project
 
-A small C# console script run on a schedule by GitHub Actions. It checks a ticketing page for availability and sends a notification when the requested tickets can be bought.
+A small C# console script run by GitHub Actions, triggered every 10 minutes by cron-job.org. It checks a ticketing page for availability and sends a notification when the requested tickets can be bought.
 
 **This is a script, not an application.** Keep it small, readable, and direct. Senior-level code here means clean and correct — not enterprise architecture.
 
@@ -35,10 +35,10 @@ src/FeverTickets/
 ├── NotificationBuilder.cs  ← statuses → NtfyMessage list (pure)
 └── NtfyClient.cs           ← NtfyMessage + sends it to ntfy.sh
 tests/FeverTickets.Tests/   ← xUnit tests for the pure parts + Fixtures/
-.github/workflows/check-tickets.yml   ← schedule, heartbeat, failure alert
+.github/workflows/check-tickets.yml   ← workflow_dispatch trigger, heartbeat input, failure alert
 ```
 
-- **Scheduling belongs to GitHub only.** The script never decides when to run, never stops itself, and has no end date.
+- **Scheduling is external (cron-job.org → GitHub API `workflow_dispatch`).** The script never decides when to run, never stops itself, and has no end date. Do not add a `schedule:` trigger — GitHub's scheduler proved unreliable and would cause duplicate runs.
 - **Failure alerts belong to the workflow** (`if: failure()` step), so build errors are covered too. The script just exits non-zero.
 
 ## Tech Stack
@@ -228,8 +228,8 @@ Use `[Theory]` + `[InlineData]` / `[MemberData]` for parameterised cases.
 - Pin action versions (`actions/checkout@v4`), never `@main`.
 - Secrets come from `${{ secrets.NAME }}` mapped into `env:` — never echoed.
 - Give each job a `timeout-minutes` so a hung run does not burn minutes.
-- Add `workflow_dispatch` alongside `schedule` so the workflow can be run manually for testing.
-- Remember: GitHub `schedule` runs are best-effort and can be delayed; the minimum interval is 5 minutes.
+- `workflow_dispatch` is the only trigger: used by cron-job.org and by the manual "Run workflow" button.
+- GitHub `schedule` runs are best-effort and can be delayed or skipped for hours — that is why this project does not use them.
 
 ---
 

@@ -1,11 +1,11 @@
 name: Check tickets
 
 on:
-  schedule:
-    # Times are UTC. GitHub runs scheduled jobs on a best-effort basis - they can start a few minutes late.
-    - cron: "*/10 * * * *" # availability check every 10 minutes
-    - cron: "3 5 * * *" # daily heartbeat - 07:03 Israel winter time (UTC+2)
-  # Adds a "Run workflow" button in the Actions tab, for manual test runs.
+  # No `schedule:` here - GitHub's scheduler is best-effort and skipped/delayed runs for hours.
+  # Instead cron-job.org triggers this workflow through the GitHub API (see README → "Scheduling"):
+  #   every 10 minutes            → body {"ref":"main"}
+  #   daily at 07:00 Israel time  → body {"ref":"main","inputs":{"heartbeat":"true"}}
+  # The same trigger powers the "Run workflow" button in the Actions tab, for manual test runs.
   workflow_dispatch:
     inputs:
       heartbeat:
@@ -35,7 +35,7 @@ jobs:
           PRIMARY_ZONE: ${{ vars.PRIMARY_ZONE }}
           SECONDARY_ZONE: ${{ vars.SECONDARY_ZONE }}
           LOG_LEVEL: ${{ vars.LOG_LEVEL }}
-          HEARTBEAT: ${{ github.event.schedule == '3 5 * * *' || inputs.heartbeat }}
+          HEARTBEAT: ${{ inputs.heartbeat }}
 
       # Runs only when an earlier step failed (build error, page changed, network error, ntfy error...).
       - name: Alert on failure
