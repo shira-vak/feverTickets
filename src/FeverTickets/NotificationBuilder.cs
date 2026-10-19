@@ -32,13 +32,14 @@ public static class NotificationBuilder
                 ClickUrl: settings.EventUrl));
         }
 
-        // Heartbeat and debug runs both send the full status; one message even when both are on.
+        // Heartbeat and debug runs both send the full status - one message even when both are on.
+        // The heartbeat wins: it should pop up every morning, while debug (every run) stays quiet.
         if (settings.IsHeartbeat || settings.IsDebug)
         {
             messages.Add(new NtfyMessage(
-                Title: settings.IsDebug ? "Debug: check result" : "Still watching",
+                Title: settings.IsHeartbeat ? "Still watching" : "Debug: check result",
                 Message: DescribeAll(statuses),
-                Priority: NtfyPriority.Low,
+                Priority: settings.IsHeartbeat ? NtfyPriority.Default : NtfyPriority.Low,
                 Tags: ["eyes"],
                 ClickUrl: null)); // Only ticket alerts link to the page.
         }

@@ -9,7 +9,8 @@ watched dates and sends a phone notification through [ntfy](https://ntfy.sh).
 | Zone A available on a watched date | 5 – urgent |
 | Only Zone B available | 3 – default |
 | The check failed (page changed, build error, network…) | 4 – high, tap to open the run logs |
-| Daily heartbeat (07:00 Israel time) with the status of every watched zone | 2 – low |
+| Daily heartbeat (07:00 Israel time) with the status of every watched zone | 3 – default |
+| Debug mode (`LOG_LEVEL=debug`): status on every run | 2 – low (silent) |
 
 ## How it works
 

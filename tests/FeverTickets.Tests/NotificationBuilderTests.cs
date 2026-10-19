@@ -43,7 +43,7 @@ public sealed class NotificationBuilderTests
     }
 
     [Fact]
-    public void Build_WhenHeartbeat_ShouldSendLowPriorityStatusMessage()
+    public void Build_WhenHeartbeat_ShouldSendDefaultPriorityStatusMessage()
     {
         IReadOnlyList<ZoneStatus> statuses = CreateStatuses(primaryTickets: NoTickets, secondaryTickets: NoTickets);
         // `with` copies a record and changes only the listed properties.
@@ -52,7 +52,7 @@ public sealed class NotificationBuilderTests
         IReadOnlyList<NtfyMessage> messages = NotificationBuilder.Build(statuses, heartbeatSettings);
 
         NtfyMessage message = Assert.Single(messages);
-        Assert.Equal(NtfyPriority.Low, message.Priority);
+        Assert.Equal(NtfyPriority.Default, message.Priority);
         Assert.Contains("sold out", message.Message, StringComparison.Ordinal);
         Assert.Null(message.ClickUrl);
     }
@@ -67,17 +67,20 @@ public sealed class NotificationBuilderTests
 
         NtfyMessage message = Assert.Single(messages);
         Assert.StartsWith("Debug", message.Title, StringComparison.Ordinal);
+        Assert.Equal(NtfyPriority.Low, message.Priority);
     }
 
     [Fact]
-    public void Build_WhenDebugAndHeartbeat_ShouldSendOnlyOneStatusMessage()
+    public void Build_WhenDebugAndHeartbeat_ShouldSendOneHeartbeatMessage()
     {
         IReadOnlyList<ZoneStatus> statuses = CreateStatuses(primaryTickets: NoTickets, secondaryTickets: NoTickets);
         Settings settings = _settings with { IsDebug = true, IsHeartbeat = true };
 
         IReadOnlyList<NtfyMessage> messages = NotificationBuilder.Build(statuses, settings);
 
-        Assert.Single(messages);
+        NtfyMessage message = Assert.Single(messages);
+        Assert.Equal("Still watching", message.Title);
+        Assert.Equal(NtfyPriority.Default, message.Priority);
     }
 
     private static ZoneStatus[] CreateStatuses(int primaryTickets, int secondaryTickets)
